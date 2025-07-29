@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>نموذج توقيع إلكتروني</title>
+  <style>
+    body {
+      font-family: Arial;
+      max-width: 400px;
+      margin: auto;
+      padding: 20px;
+      direction: rtl;
+      background: #f9f9f9;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      width: 100%;
+      height: 150px;
+      background: #fff;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px;
+      width: 100%;
+      cursor: pointer;
+      background: #2d89ef;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+    }
+    select, input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>نموذج توقيع إلكتروني</h2>
+
+  <label for="name">الاسم:</label>
+  <select id="name">
+    <option value="">اختر اسمك</option>
+    <option value="محمد">محمد</option>
+    <option value="أحمد">أحمد</option>
+    <option value="سارة">سارة</option>
+  </select>
+
+  <label for="time">الوقت:</label>
+  <input type="time" id="time">
+
+  <label for="date">التاريخ:</label>
+  <input type="date" id="date">
+
+  <label>التوقيع:</label>
+  <canvas id="signature"></canvas>
+  <button onclick="clearCanvas()">🧹 مسح التوقيع</button>
+
+  <button onclick="submitForm()">📤 إرسال</button>
+
+  <script>
+    const canvas = document.getElementById('signature');
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+
+    canvas.addEventListener('mousedown', () => drawing = true);
+    canvas.addEventListener('mouseup', () => {
+      drawing = false;
+      ctx.beginPath();
+    });
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('touchstart', e => {
+      drawing = true;
+      e.preventDefault();
+    });
+    canvas.addEventListener('touchend', () => {
+      drawing = false;
+      ctx.beginPath();
+    });
+    canvas.addEventListener('touchmove', e => {
+      if (!drawing) return;
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      drawPosition(touch.clientX - rect.left, touch.clientY - rect.top);
+      e.preventDefault();
+    });
+
+    function draw(e) {
+      if (!drawing) return;
+      const rect = canvas.getBoundingClientRect();
+      drawPosition(e.clientX - rect.left, e.clientY - rect.top);
+    }
+
+    function drawPosition(x, y) {
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#000';
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    }
+
+    function clearCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.beginPath();
+    }
+
+    function submitForm() {
+      const name = document.getElementById('name').value;
+      const time = document.getElementById('time').value;
+      const date = document.getElementById('date').value;
+      const signatureData = canvas.toDataURL();
+
+      if (!name || !time || !date || signatureData === "") {
+        alert("يرجى تعبئة جميع الحقول والتوقيع.");
+        return;
+      }
+
+      const data = {
+        name,
+        time,
+        date,
+        signature: signatureData
+      };
+
+      // 🔗 استبدل الرابط التالي برابط Google Apps Script الخاص بك
+      const scriptURL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec";
+
+      fetch(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(res => res.text())
+      .then(response => {
+        alert("✅ تم إرسال البيانات!");
+        clearCanvas();
+        document.getElementById("name").value = "";
+        document.getElementById("time").value = "";
+        document.getElementById("date").value = "";
+      })
+      .catch(err => {
+        console.error(err);
+        alert("❌ حدث خطأ أثناء الإرسال");
+      });
+    }
+  </script>
+
+</body>
+</html>
